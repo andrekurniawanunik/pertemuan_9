@@ -1,7 +1,5 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,8 +10,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Satu hal / widget tunggal: struktur aplikasi Flutter
     return MaterialApp(
-      title: 'Path Provider & File IO',
+      title: 'Secure Storage Praktikum 4',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -30,79 +29,66 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String documentsPath = '';
-  String tempPath = '';
-  late File myFile;
-  String fileText = '';
+  final TextEditingController pwdController = TextEditingController();
+  final storage = const FlutterSecureStorage();
+  final myKey = 'myPass';
+  String readResult = '';
 
-  @override
-  void initState() {
-    super.initState();
-    getPaths().then((_) {
-      myFile = File('$documentsPath/pizzas.txt');
-      writeFile();
-    });
+  Future writeToSecureStorage() async {
+    await storage.write(
+      key: myKey,
+      value: pwdController.text,
+    );
   }
 
-  Future getPaths() async {
-    final docDir = await getApplicationDocumentsDirectory();
-    final tempDir = await getTemporaryDirectory();
-    setState(() {
-      documentsPath = docDir.path;
-      tempPath = tempDir.path;
-    });
-  }
-
-  Future<bool> writeFile() async {
-    try {
-      await myFile.writeAsString('Margherita, Capricciosa, Napoli');
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<bool> readFile() async {
-    try {
-      String fileContent = await myFile.readAsString();
-      setState(() {
-        fileText = fileContent;
-      });
-      return true;
-    } catch (e) {
-      return false;
-    }
+  Future<String> readFromSecureStorage() async {
+    String secret = await storage.read(key: myKey) ?? '';
+    return secret;
   }
 
   @override
   Widget build(BuildContext context) {
+    // Satu hal / widget tunggal: layout antarmuka penyimpanan data sensitif
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Menulis dan Membaca File'),
+        title: const Text('Secure Storage (Praktikum 4)'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Doc path: $documentsPath',
-              style: const TextStyle(fontSize: 14.0),
+            TextField(
+              controller: pwdController,
+              decoration: const InputDecoration(
+                labelText: 'Masukkan Data Sensitif / Sandi',
+                border: OutlineInputBorder(),
+              ),
+              obscureText: true,
             ),
-            const SizedBox(height: 10),
-            Text(
-              'Temp path: $tempPath',
-              style: const TextStyle(fontSize: 14.0),
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => readFile(),
-              child: const Text('Baca File (Read File)'),
+              onPressed: () {
+                writeToSecureStorage();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Data berhasil disimpan secara aman!')),
+                );
+              },
+              child: const Text('Simpan Nilai (Save Value)'),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () async {
+                String val = await readFromSecureStorage();
+                setState(() {
+                  readResult = val;
+                });
+              },
+              child: const Text('Baca Nilai (Read Value)'),
+            ),
+            const SizedBox(height: 24),
             Text(
-              'Isi File: $fileText',
+              'Hasil Baca Secure Storage: $readResult',
               style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
             ),
           ],
