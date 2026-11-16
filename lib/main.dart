@@ -1,18 +1,17 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'pizza.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'JSON Serializable',
+      title: 'Praktikum 2 - SharedPreferences',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -22,63 +21,66 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Pizza> myPizzas = [];
+  int appCounter = 0;
 
   @override
   void initState() {
     super.initState();
-    readJsonFile().then((value) {
-      setState(() {
-        myPizzas = value;
-      });
-      String json = convertToJSON(myPizzas);
-      print(json);
+    readAndWritePreference();
+  }
+
+  Future<void> readAndWritePreference() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    appCounter = prefs.getInt('appCounter') ?? 0;
+    appCounter++;
+    await prefs.setInt('appCounter', appCounter);
+    setState(() {
+      appCounter = appCounter;
     });
   }
 
-  String convertToJSON(List<Pizza> pizzas) {
-    return jsonEncode(
-      pizzas.map((pizza) => pizza.toJson()).toList(),
-    );
+  // Fungsi untuk menghapus/mereset data SharedPreferences[cite: 8]
+  Future<void> deletePreference() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Menghapus semua pasangan key-value[cite: 8]
+    setState(() {
+      appCounter = 0;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('JSON to List & toJson'),
+        title: const Text('Shared Preferences - Reset Counter'),
       ),
-      body: ListView.builder(
-        itemCount: myPizzas.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(myPizzas[index].pizzaName),
-            subtitle: Text(myPizzas[index].description),
-          );
-        },
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'You have opened the app $appCounter times.',
+              style: const TextStyle(fontSize: 20),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            // Tombol Reset Counter[cite: 8]
+            ElevatedButton(
+              onPressed: () {
+                deletePreference();
+              },
+              child: const Text('Reset counter'),
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-  Future<List<Pizza>> readJsonFile() async {
-    String myString = await DefaultAssetBundle.of(context)
-        .loadString('assets/pizzalist.json');
-    
-    List pizzaMapList = jsonDecode(myString);
-    
-    List<Pizza> pizzas = [];
-    for (var pizza in pizzaMapList) {
-      Pizza myPizza = Pizza.fromJson(pizza);
-      pizzas.add(myPizza);
-    }
-    
-    return pizzas;
   }
 }
