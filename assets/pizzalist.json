@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "pizzaName": "Margherita",
+    "description": "Pizza with tomato...",
+    "price": 8.75,
+    "imageUrl": "images/margherita.png"
+  },
+  {
+    "id": 2,
+    "pizzaName": "Marinara",
+    "description": "Tomato sauce, garlic and basil",
+    "price": 6.50,
+    "imageUrl": "images/marinara.png"
+  },
+  {
+    "id": 3,
+    "pizzaName": "Calzone",
+    "description": "Pizza folded with ham and ricotta",
+    "price": 9.25,
+    "imageUrl": "images/calzone.png"
+  }
+]
